@@ -30,7 +30,10 @@ class TestbedDataset(InMemoryDataset):
 
     @property
     def processed_file_names(self):
-        return [self.dataset + '.pt']
+        if ".pt" != self.dataset[-3:]:
+            return [self.dataset + '.pt']
+        else:
+            return [self.dataset, ]
 
     def download(self):
         # Download to `self.raw_dir`.
