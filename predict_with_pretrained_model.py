@@ -56,6 +56,7 @@ for dataset in datasets:
                 print(ret)
             else:
                 print('model is not available!')
+
 with open('result.csv','w') as f:
     f.write('dataset,model,rmse,mse,pearson,spearman,ci\n')
     for ret in result:
