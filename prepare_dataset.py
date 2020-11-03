@@ -79,23 +79,27 @@ def smile2graph_dict(smiles_list):
 
     return smile_graph
 
+
 def smi2isosmi(smi):
     new_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi), isomericSmiles=True)
 
     return new_smi
 
 
-def featurize_dataset(csvfile, output_file="output", dataset_prefix="data"):
+def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fasta_dir="fastas"):
     # suppose: id, fasta, molid, smiles, pkx
     df = pd.read_csv(csvfile, header=0, index_col=None)
     print("dataset shape: ", df.shape)
     print("dataset header: ,", df.head())
 
-    train_drugs =np.asarray([smi2isosmi(x) for x in df.values[:, 3]])
+    train_drugs =np.asarray([smi2isosmi(x) for x in df.values[:, 2]])
     smile2graph_dictionary = smile2graph_dict(train_drugs)
     print("processing total number of compounds: ", train_drugs.shape[0])
 
-    train_prots = df.values[:, 1]
+    train_protein_ids = df.values[:, 0]
+    fasta_sequence_dict = fasta_dict(fasta_dir, set(list(train_protein_ids)))
+    train_prots = np.asarray([fasta_sequence_dict[x] for x in train_protein_ids])
+
     train_Y = df.values[:, -1]
     fasta_encoding = np.asarray([seq_cat(t) for t in train_prots])
     print("processing total number of fasta sequences: ", fasta_encoding.shape[0])
@@ -103,19 +107,47 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data"):
     TestbedDataset(root=dataset_prefix, dataset=output_file, xd=train_drugs,
                    xt=fasta_encoding, y=train_Y, smile_graph=smile2graph_dictionary)
 
-
 def arguments():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", default='input.csv', type=str, help='input csv file')
     parser.add_argument("-o", default='output.pt', type=str, help='output filename in pytorch format')
+    parser.add_argument("-f", default='fasta_file.fasta', type=str,
+                        help='a fasta file containing the target fasta')
 
     args = parser.parse_args()
 
     if len(sys.argv) < 2:
+        parser.print_help()
         sys.exit(0)
 
     return args
+
+
+def fasta_dict(fasta_dir, prot_ids):
+
+    fasta_seq_dict = {}
+    for p in prot_ids:
+        fn = os.path.join(os.path.join(fasta_dir, p+".fasta"))
+        if os.path.exists(fn):
+            fasta_seq_dict[p] = get_fasta_seq(fn)
+        else:
+            print("fasta file not exists: ", fn)
+            fasta_seq_dict[p] = "X"
+
+    return fasta_seq_dict
+
+
+def get_fasta_seq(fasta_file):
+    try:
+        with open(fasta_file) as lines:
+            seq = [x for x in lines if len(x) and x[0] != ">"]
+            seq = "".join(seq)
+    except:
+        print("fasta file processing error: ", fasta_file)
+        seq = "X"
+
+    return seq
 
 
 if __name__ == "__main__":
