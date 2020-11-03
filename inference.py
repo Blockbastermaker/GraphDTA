@@ -69,7 +69,7 @@ if __name__ == "__main__":
         if os.path.isfile(model_file_name):
             model.load_state_dict(torch.load(model_file_name))
             G, P = predicting(model, device, test_loader)
-            print("ground,pred", G, P)
+            #print("ground,pred", G, P)
             ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
             ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
             result += [ret]
