@@ -113,5 +113,8 @@ def ci(y,f):
             j = j - 1
         i = i - 1
         j = i-1
-    ci = S/z
+    try:
+        ci = S/z
+    except:
+        ci = 0.0
     return ci

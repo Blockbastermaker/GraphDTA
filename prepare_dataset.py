@@ -113,7 +113,6 @@ def arguments():
     args = parser.parse_args()
 
     if len(sys.argv) < 2:
-        parser.parse_args()
         sys.exit(0)
 
     return args
@@ -132,6 +131,6 @@ if __name__ == "__main__":
 
     outname = os.path.basename(args.i)
 
-    featurize_dataset(args.c, dataset_prefix=dirname, output_file=outname)
+    featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname)
 
     print("Featurization completed...")

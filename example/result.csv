@@ -1,0 +1,3 @@
+dataset,model,rmse,mse,pearson,spearman,ci
+test.csv.pt,GINConvNet,nan,nan,nan,nan,0.0
+test.csv.pt,GCNNet,nan,nan,nan,nan,0.0
