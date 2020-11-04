@@ -10,6 +10,7 @@ from models.gcn import GCNNet
 from models.ginconv import GINConvNet
 from utils import *
 import argparse
+from prepare_dataset import *
 
 
 def predicting(model, device, loader):
@@ -28,8 +29,12 @@ def predicting(model, device, loader):
 
 def arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", type=str, default='input.pt', help="input pytorch pt file")
-    parser.add_argument("-o", type=str, default='out.csv', help="output csv file")
+    parser.add_argument("-i", type=str, default="input.csv", help="input csv file.")
+    parser.add_argument("-f", default='fasta_file.fasta', type=str,
+                        help='a fasta file containing the target fasta')
+    parser.add_argument("-d", type=str, default='data/', help="intermediate feature pt file")
+    parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
+    #parser.add_argument("-e", type=str, default='out.csv', help="evaluation output csv file")
     parser.add_argument("-m", type=str, default='pretrained/', help='pretrained model dir')
 
     args = parser.parse_args()
@@ -43,6 +48,17 @@ def arguments():
 if __name__ == "__main__":
 
     args = arguments()
+
+    # dataset preparation
+    dirname = os.path.dirname(args.d)
+    if not os.path.isdir(dirname):
+        os.mkdir(dirname)
+
+    outname = os.path.basename(args.i)[:-4]
+    targets, molids = featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname)
+    print("Featurization completed...")
+
+    # inference starting from here
     modelings = [GINConvNet, GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
 
     cuda_name = "cuda:0"
@@ -50,8 +66,8 @@ if __name__ == "__main__":
     datasets = ['davis', 'kiba']
 
     TEST_BATCH_SIZE = 512
-    pt_file_basename = os.path.basename(args.i)
-    pt_file_dirname  = os.path.dirname(args.i)
+    pt_file_basename = outname
+    pt_file_dirname  = dirname
 
     test_data = TestbedDataset(root=pt_file_dirname, dataset=pt_file_basename)
     test_loader = DataLoader(test_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
@@ -69,16 +85,23 @@ if __name__ == "__main__":
         if os.path.isfile(model_file_name):
             model.load_state_dict(torch.load(model_file_name))
             G, P = predicting(model, device, test_loader)
-            #print("ground,pred", G, P)
             ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
             ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
             result += [ret]
-            print('dataset,model,rmse,mse,pearson,spearman,ci')
-            print(ret)
+            #print('dataset,model,rmse,mse,pearson,spearman,ci')
+            #print(ret)
+
+            assert P.shape[0] == len(molids)
+            data_out = pd.DataFrame()
+            data_out['target'] = targets
+            data_out['molid'] = molids
+            data_out['pred_pkx'] = P
+
+            data_out.to_csv(args.o + "_" + model_st)
         else:
             print('model is not available!')
 
-    with open('result.csv','w') as f:
+    with open('result_performance.csv','w') as f:
         f.write('dataset,model,rmse,mse,pearson,spearman,ci\n')
         for ret in result:
             f.write(','.join(map(str,ret)) + '\n')
