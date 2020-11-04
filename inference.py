@@ -34,7 +34,7 @@ def arguments():
                         help='a fasta file containing the target fasta')
     parser.add_argument("-d", type=str, default='data/', help="intermediate feature pt file")
     parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
-    #parser.add_argument("-e", type=str, default='out.csv', help="evaluation output csv file")
+    parser.add_argument("-e", type=str, default='perform_out.csv', help="evaluation output csv file")
     parser.add_argument("-m", type=str, default='pretrained/', help='pretrained model dir')
 
     args = parser.parse_args()
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         os.mkdir(dirname)
 
     outname = os.path.basename(args.i)[:-4]
-    targets, molids = featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname)
+    targets, molids = featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname, fasta_dir=args.f)
     print("Featurization completed...")
 
     # inference starting from here
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         else:
             print('model is not available!')
 
-    with open('result_performance.csv','w') as f:
+    with open(args.e,'w') as f:
         f.write('dataset,model,rmse,mse,pearson,spearman,ci\n')
         for ret in result:
             f.write(','.join(map(str,ret)) + '\n')

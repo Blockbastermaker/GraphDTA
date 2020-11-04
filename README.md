@@ -32,6 +32,13 @@ pip install torch-geometric
 
 ```
 
+## Usage example 
+```
+cd example
+python ../inference.py -i 2cnk.csv -f fasta_sequences/ -d data2cnk/test -o predicted -m ../pretrained/
+```
+
+
 ## 1. Create data in pytorch format
 Running
 ```sh

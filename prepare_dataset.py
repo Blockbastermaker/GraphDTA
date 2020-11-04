@@ -154,7 +154,7 @@ def fasta_dict(fasta_dir, prot_ids):
 def get_fasta_seq(fasta_file):
     try:
         with open(fasta_file) as lines:
-            seq = [x for x in lines if len(x) and x[0] != ">"]
+            seq = [x.strip("\n") for x in lines if len(x) and x[0] != ">"]
             seq = "".join(seq)
     except:
         print("fasta file processing error: ", fasta_file)
