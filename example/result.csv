@@ -1,3 +1,3 @@
 dataset,model,rmse,mse,pearson,spearman,ci
-test.csv.pt,GINConvNet,nan,nan,nan,nan,0.0
-test.csv.pt,GCNNet,nan,nan,nan,nan,0.0
+2cnk.csv.pt,GINConvNet,1.081,1.168,0.059,0.042,0.515
+2cnk.csv.pt,GCNNet,0.946,0.895,0.009,0.032,0.511
