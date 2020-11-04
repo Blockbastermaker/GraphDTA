@@ -35,7 +35,11 @@ def one_of_k_encoding_unk(x, allowable_set):
 
 
 def smile_to_graph(smile):
-    mol = Chem.MolFromSmiles(smile)
+    try:
+        mol = Chem.MolFromSmiles(smile)
+    except:
+        print("INFO: error! loading smiles error ", smile)
+        mol = Chem.MolFromSmiles("CC")
 
     c_size = mol.GetNumAtoms()
 
@@ -81,7 +85,11 @@ def smile2graph_dict(smiles_list):
 
 
 def smi2isosmi(smi):
-    new_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi), isomericSmiles=True)
+    try:
+        new_smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi), isomericSmiles=True)
+    except:
+        print("INFO: error! convert smiles failed ", smi)
+        new_smi = "C"
 
     return new_smi
 
@@ -91,6 +99,9 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
     df = pd.read_csv(csvfile, header=0, index_col=None)
     print("dataset shape: ", df.shape)
     print("dataset header: ,", df.head())
+
+    target_list = df.values[:, 0]
+    molid_list = df.values[:, 1]
 
     train_drugs =np.asarray([smi2isosmi(x) for x in df.values[:, 2]])
     smile2graph_dictionary = smile2graph_dict(train_drugs)
@@ -106,6 +117,8 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
 
     TestbedDataset(root=dataset_prefix, dataset=output_file, xd=train_drugs,
                    xt=fasta_encoding, y=train_Y, smile_graph=smile2graph_dictionary)
+
+    return target_list, molid_list
 
 def arguments():
 

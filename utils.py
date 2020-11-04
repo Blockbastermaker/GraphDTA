@@ -9,7 +9,7 @@ import torch
 class TestbedDataset(InMemoryDataset):
     def __init__(self, root='/tmp', dataset='davis', 
                  xd=None, xt=None, y=None, transform=None,
-                 pre_transform=None,smile_graph=None):
+                 pre_transform=None, smile_graph=None):
 
         #root is required for save preprocessed data, default is '/tmp'
         super(TestbedDataset, self).__init__(root, transform, pre_transform)
