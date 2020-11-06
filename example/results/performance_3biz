@@ -1,3 +1,2 @@
 dataset,model,rmse,mse,pearson,spearman,ci
-3biz,GINConvNet,2.78,7.729,-0.421,-0.201,0.429
-3biz,GCNNet,2.456,6.032,-0.122,-0.105,0.465
+3biz,GINConvNet,1.048,1.097,-0.04,-0.067,0.479

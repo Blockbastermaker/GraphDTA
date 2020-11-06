@@ -42,7 +42,7 @@ def predicting(model, device, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 
-datasets = [['davis','kiba'][int(sys.argv[1])]] 
+datasets = [sys.argv[1], ] 
 modeling = [GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
 model_st = modeling.__name__
 
@@ -98,6 +98,7 @@ for dataset in datasets:
             print('predicting for valid data')
             G,P = predicting(model, device, valid_loader)
             val = mse(G,P)
+            _pr = pearson(G, P)
             if val<best_mse:
                 best_mse = val
                 best_epoch = epoch+1
@@ -109,7 +110,9 @@ for dataset in datasets:
                     f.write(','.join(map(str,ret)))
                 best_test_mse = ret[1]
                 best_test_ci = ret[-1]
-                print('rmse improved at epoch ', best_epoch, '; best_test_mse,best_test_ci:', best_test_mse,best_test_ci,model_st,dataset)
+                best_test_pr = ret[-3]
+                print('rmse improved at epoch ', best_epoch, '; best_test_mse,best_test_ci,R:', best_test_mse,best_test_ci,best_test_pr,model_st,dataset)
             else:
-                print(ret[1],'No improvement since epoch ', best_epoch, '; best_test_mse,best_test_ci:', best_test_mse,best_test_ci,model_st,dataset)
+                print("current test_mse, test_r: ", val, _pr)
+                print(ret[1], 'No improvement since epoch ', best_epoch, ) #'; test_mse,test_ci,test_r:', best_test_mse,best_test_ci,best_test_pr, model_st,dataset)
 
