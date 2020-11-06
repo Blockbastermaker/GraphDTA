@@ -59,19 +59,11 @@ if __name__ == "__main__":
     print("Featurization completed...")
 
     # inference starting from here
-<<<<<<< HEAD
     modelings = [GINConvNet, ] #GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
 
     cuda_name = "cuda:0"
     print('cuda_name:', "cuda:0")
     datasets = ['3fam', 'kiba']
-=======
-    modelings = [GINConvNet, GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
-
-    cuda_name = "cuda:0"
-    print('cuda_name:', "cuda:0")
-    datasets = ['davis', 'kiba']
->>>>>>> 955e407daeaa80833dc21b636a1a680f60d8ea73
 
     TEST_BATCH_SIZE = 512
     pt_file_basename = outname
