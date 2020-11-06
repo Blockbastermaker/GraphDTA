@@ -1,2 +1,0 @@
-dataset,model,rmse,mse,pearson,spearman,ci
-3c4f,GINConvNet,0.939,0.882,0.719,0.589,0.757
