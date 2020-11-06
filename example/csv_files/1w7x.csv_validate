@@ -1,0 +1,12 @@
+1w7x,CHEMBL3892246,C[C@H]1COC(=O)Nc2cc(F)c(O[C@@H]3COC[C@@H]3O)c(CN(C)C(=O)[C@H](Nc4ccc5c(N)nccc5c4)c6ccc1c(C)c6)c2,8.066561092999999
+1w7x,CHEMBL3930738,C[C@H]1COC(=O)Nc2cc(F)c(O[C@H]3CCOC3)c(CN(C)C(=O)C(Nc4ccc5c(N)nccc5c4)c6ccc1c(C)c6)c2,8.849485002
+1w7x,CHEMBL3986081,C[C@H]1COC(=O)Nc2cc(F)c(O[C@@H]3CCOC3)c(CN(C)C(=O)[C@H](Nc4ccc5c(N)nccc5c4)c6ccc1c(C)c6)c2,8.419315999
+1w7x,CHEMBL407142,NC(=N)NCCC[C@H](NC(=O)[C@H](Cc1ccc(cc1)c2ccccc2)NC(=O)[C@@H](Cc3ccccc3)NS(=O)(=O)Cc4ccccc4)C(=O)c5nccs5,4.749579998
+1w7x,CHEMBL339956,NC(=N)NCCC[C@H](NC(=O)[C@H](CC1CCCCC1)NC(=O)[C@@H](Cc2ccccc2)NS(=O)(=O)Cc3ccccc3)C(=O)c4nccs4,5.48148606
+1w7x,CHEMBL337930,NC(=N)NCCC[C@H](NC(=O)[C@H](CC1CC1)NC(=O)[C@@H](Cc2ccccc2)NS(=O)(=O)Cc3ccccc3)C(=O)c4nccs4,6.0861861479999995
+1w7x,CHEMBL336553,NC(=N)NCCC[C@H](NC(=O)[C@H](Cc1cn(Cc2ccccc2)cn1)NC(=O)[C@@H](Cc3ccccc3)NS(=O)(=O)Cc4ccccc4)C(=O)c5nccs5,5.001304842
+1w7x,CHEMBL334121,NC(=N)NCCC[C@H](NC(=O)[C@H](Cc1csc2ccccc12)NC(=O)[C@@H](Cc3ccccc3)NS(=O)(=O)Cc4ccccc4)C(=O)c5nccs5,6.3010299960000005
+1w7x,CHEMBL132395,NC(=N)NCCC[C@H](NC(=O)[C@H](CC(=O)OC1CCCCC1)NC(=O)[C@@H](Cc2ccccc2)NS(=O)(=O)Cc3ccccc3)C(=O)c4nccs4,5.49757288
+1w7x,CHEMBL132057,NC(=N)NCCC[C@H](NC(=O)[C@H](CCc1ccccc1)NC(=O)[C@@H](Cc2ccccc2)NS(=O)(=O)Cc3ccccc3)C(=O)c4nccs4,6.045757491
+1w7x,CHEMBL131452,NC(=N)NCCC[C@H](NC(=O)[C@H](COCc1ccccc1)NC(=O)[C@@H](Cc2ccccc2)NS(=O)(=O)Cc3ccccc3)C(=O)c4nccs4,5.815308569
+1w7x,CHEMBL130773,NC(=N)NCCC[C@H](NC(=O)[C@H](Cc1cccc(c1)c2ccccc2)NC(=O)[C@@H](Cc3ccccc3)NS(=O)(=O)Cc4ccccc4)C(=O)c5nccs5,5.73754891

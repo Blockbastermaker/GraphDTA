@@ -1,0 +1,14 @@
+3d0e,CHEMBL3699747,NC1(c2ccc(-c3nc4c(-c5ccn[nH]5)cccn4c3-c3ccccc3)cc2)CCC1,6.7696
+3d0e,CHEMBL3699761,Cc1c(Cl)cn2c(-c3ccccc3)c(-c3ccc(C4(N)CCC4)cc3)nc2c1-c1ccn[nH]1,6.4067
+3d0e,CHEMBL3699765,Cc1cc(-c2ccn[nH]2)c2nc(-c3ccc(C4(N)CCC4)cc3)c(-c3ccccc3)n2c1,6.1331
+3d0e,CHEMBL3703125,Cn1cncc1-c1ccc2nc(-c3ccc(C4(N)CCC4)cc3)c(-c3ccccc3)n2c1,7.0132
+3d0e,CHEMBL3703139,COc1cc(-c2cnc[nH]2)cn2c(-c3ccccc3)c(-c3ccc(C4(N)CCC4)cc3)nc12,7.3098
+3d0e,CHEMBL3699745,NC1(c2ccc(-c3nc4c(-c5cccc(F)c5)cccn4c3-c3ccccc3)cc2)CCC1,6.3188
+3d0e,CHEMBL3699760,Cc1c(Cl)cn2c(-c3ccccc3)c(-c3ccc(C4(N)CCC4)cc3)nc2c1-c1ccc(F)cc1,6.2874
+3d0e,CHEMBL3699726,NC1(c2ccc(-c3nc4c(-c5cn[nH]c5)cccn4c3-c3ccccc3)cc2)CCC1,6.6364
+3d0e,CHEMBL3699766,Cc1cc(-c2cn[nH]c2)c2nc(-c3ccc(C4(N)CCC4)cc3)c(-c3ccccc3)n2c1,6.6925
+3d0e,CHEMBL3703130,NC1(c2ccc(-c3nc4ccc(-c5ccccn5)cn4c3-c3ccccc3)cc2)CCC1,6.3354
+3d0e,CHEMBL3703128,NC1(c2ccc(-c3nc4ccc(-c5ccncc5)cn4c3-c3ccccc3)cc2)CCC1,6.5406
+3d0e,CHEMBL3703123,NC1(c2ccc(-c3nc4ccc(-c5cc[nH]n5)cn4c3-c3ccccc3)cc2)CCC1,6.2248
+3d0e,CHEMBL3703122,NC1(c2ccc(-c3nc4ccc(-c5ncc[nH]5)cn4c3-c3ccccc3)cc2)CCC1,6.2976
+3d0e,CHEMBL3703110,Cn1cncc1-c1ccn2c(-c3ccccc3)c(-c3ccc(C4(N)CCC4)cc3)nc2c1,7.8861
