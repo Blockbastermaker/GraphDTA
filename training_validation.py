@@ -42,7 +42,7 @@ def predicting(model, device, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 
-datasets = [['davis','kiba'][int(sys.argv[1])]] 
+datasets = [int(sys.argv[1]), ]
 modeling = [GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
 model_st = modeling.__name__
 
@@ -75,8 +75,7 @@ for dataset in datasets:
         train_size = int(0.8 * len(train_data))
         valid_size = len(train_data) - train_size
         train_data, valid_data = torch.utils.data.random_split(train_data, [train_size, valid_size])        
-        
-        
+
         # make data PyTorch mini-batch processing ready
         train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
         valid_loader = DataLoader(valid_data, batch_size=TEST_BATCH_SIZE, shuffle=False)

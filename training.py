@@ -42,7 +42,7 @@ def predicting(model, device, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 
-datasets = sys.argv[1]
+datasets = [sys.argv[1], ]
 modeling = [GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
 model_st = modeling.__name__
 
@@ -62,9 +62,12 @@ print('Epochs: ', NUM_EPOCHS)
 
 # Main program: iterate over different datasets
 for dataset in datasets:
+
     print('\nrunning on ', model_st + '_' + dataset )
     processed_data_file_train = 'data/processed/' + dataset + '_train.pt'
     processed_data_file_test = 'data/processed/' + dataset + '_test.pt'
+    model_file_name = 'model_' + model_st + '_' + dataset + '.model'
+
     if ((not os.path.isfile(processed_data_file_train)) or (not os.path.isfile(processed_data_file_test))):
         print('please run create_data.py to prepare data in pytorch format!')
     else:
