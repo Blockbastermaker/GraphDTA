@@ -46,9 +46,11 @@ datasets = [sys.argv[1], ]
 modeling = [GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
 model_st = modeling.__name__
 
+pretrained = sys.argv[3]
+
 cuda_name = "cuda:0"
-if len(sys.argv)>3:
-    cuda_name = ["cuda:0","cuda:1"][int(sys.argv[3])]
+#if len(sys.argv)>3:
+#    cuda_name = ["cuda:0","cuda:1"][int(sys.argv[3])]
 print('cuda_name:', cuda_name)
 
 TRAIN_BATCH_SIZE = 512
@@ -76,7 +78,6 @@ for dataset in datasets:
         valid_size = len(train_data) - train_size
         train_data, valid_data = torch.utils.data.random_split(train_data, [train_size, valid_size])        
         
-        
         # make data PyTorch mini-batch processing ready
         train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
         valid_loader = DataLoader(valid_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
@@ -85,6 +86,10 @@ for dataset in datasets:
         # training the model
         device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
         model = modeling().to(device)
+        if os.path.exists(pretrained):
+            print("using pretrained model: ", pretrained)
+            model.load_state_dict(torch.load(pretrained))
+
         loss_fn = nn.MSELoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=LR)
         best_mse = 1000
