@@ -198,6 +198,6 @@ if __name__ == "__main__":
 
     outname = os.path.basename(args.i)
 
-    featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname)
+    featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname, fasta_dir=args.f)
 
     print("Featurization completed...")
