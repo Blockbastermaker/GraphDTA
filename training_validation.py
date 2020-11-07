@@ -9,9 +9,39 @@ from models.gat_gcn import GAT_GCN
 from models.gcn import GCNNet
 from models.ginconv import GINConvNet
 from utils import *
+import argparse
+
+
+def arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-tr", default=['data/processed/train.pt'], nargs="+",
+                        type=str, help="train.pt file for training")
+    parser.add_argument("-val", default=['data/processed/validate.pt'], nargs="+",
+                        type=str, help="validating file for training")
+    parser.add_argument("-ts", default=['data/processed/test.pt'], nargs="+", type=str,
+                        help="test.pt file for testing")
+    parser.add_argument("-o", default='out_model.model', type=str,
+                        help="output model for weights")
+    parser.add_argument("-ne", type=int, default=1000,
+                        help="number of epochs for training")
+    parser.add_argument("-cude", type=int, default=-1, help="cuda device id")
+    parser.add_argument("-pt", type=str, default='pretrained.model',
+                        help="pretrained model to load")
+    parser.add_argument("-r", type=str, default='performance.csv',
+                        help="test set performance csv")
+    parser.add_argument("-l", type=str, default='training.log',
+                        help="training log file")
+
+    args = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(0)
+
+    return args
+
 
 # training function at each epoch
-def train(model, device, train_loader, optimizer, epoch):
+def train(model, device, train_loader, optimizer, epoch, loss_fn, LOG_INTERVAL=20):
     print('Training on {} samples...'.format(len(train_loader.dataset)))
     model.train()
     for batch_idx, data in enumerate(train_loader):
@@ -42,82 +72,124 @@ def predicting(model, device, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 
-datasets = [int(sys.argv[1]), ]
-modeling = [GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
-model_st = modeling.__name__
+def combine_dataset(files_list):
 
-pretrained = sys.argv[3]
+    datasets = []
+    for f in files_list:
+        _dataset = load_torch_file(f)
+        if _dataset is not None:
+            datasets.append(_dataset)
 
-cuda_name = "cuda:0"
-#if len(sys.argv)>3:
-#    cuda_name = ["cuda:0","cuda:1"][int(sys.argv[3])]
-print('cuda_name:', cuda_name)
-
-TRAIN_BATCH_SIZE = 512
-TEST_BATCH_SIZE = 512
-LR = 0.0005
-LOG_INTERVAL = 20
-NUM_EPOCHS = 1000
-
-print('Learning rate: ', LR)
-print('Epochs: ', NUM_EPOCHS)
-
-# Main program: iterate over different datasets
-for dataset in datasets:
-    print('\nrunning on ', model_st + '_' + dataset )
-    processed_data_file_train = 'data/processed/' + dataset + '_train.pt'
-    processed_data_file_test = 'data/processed/' + dataset + '_test.pt'
-    if ((not os.path.isfile(processed_data_file_train)) or (not os.path.isfile(processed_data_file_test))):
-        print('please run create_data.py to prepare data in pytorch format!')
+    final_dataset = None
+    if len(datasets) == 1:
+        final_dataset = datasets[0]
+    elif len(datasets) > 1:
+        final_dataset = torch.utils.data.ConncatDataset(datasets)
     else:
-        train_data = TestbedDataset(root='data', dataset=dataset+'_train')
-        test_data = TestbedDataset(root='data', dataset=dataset+'_test')
-        
-        
+        return None
+
+    return final_dataset
+
+
+def load_torch_file(pt_file):
+    if "processed" in pt_file:
+        dirname = os.path.dirname(pt_file).split("/")[0]
+        filename = ".".join(os.path.basename(pt_file).split(".")[:-1])
+        dataset = TestbedDataset(root=dirname, dataset=filename)
+
+        return dataset
+    else:
+        print("the file path format is incorrect, should be data/processed/input.pt")
+        return None
+
+
+def main():
+
+    args = arguments()
+
+    modeling = GINConvNet #[GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
+    #model_st = modeling.__name__
+    pretrained = args.pt
+
+    if args.cuda >= 0:
+        cuda_name = "cuda:%d" % args.cuda
+        print('cuda_name:', cuda_name)
+    else:
+        cuda_name = "cpu"
+
+    # parameters
+    TRAIN_BATCH_SIZE = 512
+    TEST_BATCH_SIZE = 512
+    LR = 0.0005
+    LOG_INTERVAL = 20
+    NUM_EPOCHS = args.ne
+    print('Learning rate: ', LR)
+    print('Epochs: ', NUM_EPOCHS)
+
+    train_data = combine_dataset(args.tr)
+    valid_data = combine_dataset(args.val)
+    test_data = combine_dataset(args.ts)
+
+    if train_data is None or test_data is None:
+        print("Error: empty dataset in train or test ...")
+    elif valid_data is None:
+        print("Warning: empty dataset in validate ...")
         train_size = int(0.8 * len(train_data))
         valid_size = len(train_data) - train_size
-        train_data, valid_data = torch.utils.data.random_split(train_data, [train_size, valid_size])        
-        
-        # make data PyTorch mini-batch processing ready
-        train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
-        valid_loader = DataLoader(valid_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
-        test_loader = DataLoader(test_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
+        train_data, valid_data = torch.utils.data.random_split(train_data,
+                                                               [train_size, valid_size])
+    else:
+        print("dataset loaded ......")
 
-        # training the model
-        device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
-        model = modeling().to(device)
-        if os.path.exists(pretrained):
-            print("using pretrained model: ", pretrained)
-            model.load_state_dict(torch.load(pretrained))
+    # make data PyTorch mini-batch processing ready
+    train_loader = DataLoader(train_data, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
+    valid_loader = DataLoader(valid_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(test_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
 
-        loss_fn = nn.MSELoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-        best_mse = 1000
-        best_test_mse = 1000
-        best_test_ci = 0
-        best_epoch = -1
-        model_file_name = 'model_' + model_st + '_' + dataset +  '.model'
-        result_file_name = 'result_' + model_st + '_' + dataset +  '.csv'
-        for epoch in range(NUM_EPOCHS):
-            train(model, device, train_loader, optimizer, epoch+1)
-            print('predicting for valid data')
-            G,P = predicting(model, device, valid_loader)
-            val = mse(G,P)
-            _pr = pearson(G, P)
-            if val<best_mse:
-                best_mse = val
-                best_epoch = epoch+1
-                torch.save(model.state_dict(), model_file_name)
-                print('predicting for test data')
-                G,P = predicting(model, device, test_loader)
-                ret = [rmse(G,P),mse(G,P),pearson(G,P),spearman(G,P),ci(G,P)]
-                with open(result_file_name,'w') as f:
-                    f.write(','.join(map(str,ret)))
-                best_test_mse = ret[1]
-                best_test_ci = ret[-1]
-                best_test_pr = ret[-3]
-                print('rmse improved at epoch ', best_epoch, '; best_test_mse,best_test_ci,R:', best_test_mse,best_test_ci,best_test_pr,model_st,dataset)
-            else:
-                print("current test_mse, test_r: ", val, _pr)
-                print(ret[1], 'No improvement since epoch ', best_epoch, ) #'; test_mse,test_ci,test_r:', best_test_mse,best_test_ci,best_test_pr, model_st,dataset)
+    # training the model
+    device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
+    model = modeling().to(device)
+    if os.path.exists(pretrained):
+        print("using pretrained model: ", pretrained)
+        model.load_state_dict(torch.load(pretrained))
+
+    loss_fn = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+    best_mse = 1000
+    best_test_mse = 1000
+    best_test_ci = 0
+    best_epoch = -1
+    model_file_name = args.o
+    result_file_name = args.r
+    log_file_name = args.l
+
+    log_infor = []
+
+    for epoch in range(NUM_EPOCHS):
+        train(model, device, train_loader, optimizer, epoch + 1,
+              loss_fn=loss_fn, LOG_INTERVAL=LOG_INTERVAL)
+
+        G, P = predicting(model, device, valid_loader)
+        val_mse, val_rmse, val_pr = mse(G, P), rmse(G, P), pearson(G, P)
+
+        G, P = predicting(model, device, test_loader)
+        test_mse, test_rmse, test_pr = mse(G, P), rmse(G, P), pearson(G, P)
+
+        if val_mse < best_mse:
+            best_mse = val_mse
+            best_epoch = epoch + 1
+
+            # save best model
+            torch.save(model.state_dict(), model_file_name)
+
+        print("\n=> LastBest %4d | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%.3f R=%6.3f \n" %
+              (best_epoch, epoch, val_mse, val_pr, test_mse, test_pr))
+
+        log_infor.append([best_epoch, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr])
+
+        # save log file
+        if epoch % 10 == 0:
+            df = pd.DataFrame(log_infor, columns=['best_epoch', 'epoch', 'v_rmse',
+                                                  'v_mse', 'v_r', 't_rmse', 't_mse', 't_r'])
+            df.to_csv(log_file_name)
 
