@@ -13,8 +13,10 @@ from inference import InferenceModel
 from preprocessing import preprocess_smiles
 from hyperparameters import DEFAULT_DATA_DIR
 
-def smile2embedding(smile_list, model_dir, use_gpu=True, num_cpus=12):
-    infer_model = InferenceModel(model_dir=model_dir,
+
+def smiles2embedding(smile_list, use_gpu=1, num_cpus=12):
+    md = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../default_model")
+    infer_model = InferenceModel(model_dir=md,
                                  use_gpu=use_gpu,
                                  batch_size=128,
                                  cpu_threads=num_cpus)
@@ -118,12 +120,13 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
     target_list = df.values[:, 0]
     molid_list = df.values[:, 1]
 
-    train_drugs =np.asarray([smi2isosmi(x) for x in df.values[:, 2]])
+    smiles_list = [smi2isosmi(x) for x in df.values[:, 2]]
+    train_drugs =np.asarray(smiles_list)
     smile2graph_dictionary = smile2graph_dict(train_drugs)
     print("processing total number of compounds: ", train_drugs.shape[0])
 
     # embedding drug molecules
-    drug_embedding = []
+    drug_embedding = smiles2embedding(smiles_list)
 
     train_protein_ids = df.values[:, 0]
     fasta_sequence_dict = fasta_dict(fasta_dir, set(list(train_protein_ids)))
