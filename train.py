@@ -31,6 +31,8 @@ def arguments():
                         help="test set performance csv")
     parser.add_argument("-l", type=str, default='training.log',
                         help="training log file")
+    parser.add_argument("-ct", dest='test_csv', default='test.csv',
+                        help="the original dataset containing the target idd information")
 
     args = parser.parse_args()
     if len(sys.argv) < 2:
@@ -103,6 +105,34 @@ def load_torch_file(pt_file):
         return None
 
 
+def correlation_average(targets, ytrue, ypred):
+
+    if targets.ravel().shape[0] == len(list(ypred)):
+        df = pd.DataFrame()
+        df['target'] = targets
+        df['ytrue'] = ytrue
+        df['ypred'] = ypred
+
+        unique_targets = set(list(targets))
+        rp_values = []
+        rs_values = []
+        for t in unique_targets:
+            dat = df[df['target'] == t]
+            try:
+                _rp = pearson(dat['ytrue'], dat['ypred'])
+                _rs = spearman(dat['ytrue'], dat['ypred'])
+            except:
+                _rp = 0.0
+                _rs = 0.0
+
+            rp_values.append(_rp)
+            rs_values.append(_rs)
+
+        return np.mean(rp_values), np.mean(rs_values)
+    else:
+        return 0.0, 0.0
+
+
 def main():
 
     args = arguments()
@@ -116,6 +146,12 @@ def main():
         print('cuda_name:', cuda_name)
     else:
         cuda_name = "cpu"
+
+    if os.path.exists(args.ct):
+        _targets = pd.read_csv(args.ct, header=None,
+                               index_col=None).values[:, 0]
+    else:
+        _targets = None
 
     # parameters
     TRAIN_BATCH_SIZE = 512
@@ -174,6 +210,10 @@ def main():
 
         G, P = predicting(model, device, test_loader)
         test_mse, test_rmse, test_pr = mse(G, P), rmse(G, P), pearson(G, P)
+        if _targets is None:
+            rp, rs = 0.0, 0.0
+        else:
+            rp, rs = correlation_average(_targets, G, P)
 
         if val_mse < best_mse:
             best_mse = val_mse
@@ -182,8 +222,8 @@ def main():
             # save best model
             torch.save(model.state_dict(), model_file_name)
 
-        print("\n=>LastBest %4d MSE=%6.3f | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%6.3f R=%6.3f \n" %
-              (best_epoch, best_mse, epoch, val_mse, val_pr, test_mse, test_pr))
+        print("\n=>LastBest %4d MSE=%6.3f | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%6.3f R=%6.3f AR(P)=%.3f AR(S)=%.3f\n" %
+              (best_epoch, best_mse, epoch, val_mse, val_pr, test_mse, test_pr, rp, rs))
 
         log_infor.append([best_epoch, best_mse, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr])
 
