@@ -106,8 +106,8 @@ def load_torch_file(pt_file):
 
 
 def correlation_average(targets, ytrue, ypred):
-
-    if targets.ravel().shape[0] == len(list(ypred)):
+    targets = targets[1:]
+    if targets.ravel().shape[0] == ypred.shape[0]:
         df = pd.DataFrame()
         df['target'] = targets
         df['ytrue'] = ytrue
@@ -118,9 +118,10 @@ def correlation_average(targets, ytrue, ypred):
         rs_values = []
         for t in unique_targets:
             dat = df[df['target'] == t]
+            #print(dat.head())
             try:
-                _rp = pearson(dat['ytrue'], dat['ypred'])
-                _rs = spearman(dat['ytrue'], dat['ypred'])
+                _rp = pearson(dat['ytrue'].values, dat['ypred'].values)
+                _rs = spearman(dat['ytrue'].values, dat['ypred'].values)
             except:
                 _rp = 0.0
                 _rs = 0.0
@@ -130,6 +131,7 @@ def correlation_average(targets, ytrue, ypred):
 
         return np.mean(rp_values), np.mean(rs_values)
     else:
+        print("shape unmatch", targets.shape, ypred.shape)
         return 0.0, 0.0
 
 
@@ -147,9 +149,10 @@ def main():
     else:
         cuda_name = "cpu"
 
-    if os.path.exists(args.ct):
-        _targets = pd.read_csv(args.ct, header=None,
+    if os.path.exists(args.test_csv):
+        _targets = pd.read_csv(args.test_csv, header=None,
                                index_col=None).values[:, 0]
+        print("total %d targets ", len(set(_targets)))
     else:
         _targets = None
 
@@ -225,12 +228,12 @@ def main():
         print("\n=>LastBest %4d MSE=%6.3f | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%6.3f R=%6.3f AR(P)=%.3f AR(S)=%.3f\n" %
               (best_epoch, best_mse, epoch, val_mse, val_pr, test_mse, test_pr, rp, rs))
 
-        log_infor.append([best_epoch, best_mse, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr])
+        log_infor.append([best_epoch, best_mse, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr, rp, rs])
 
         # save log file
         if epoch % 10 == 0:
             df = pd.DataFrame(log_infor, columns=['best_epoch', 'best_mse', 'epoch', 'v_rmse',
-                                                  'v_mse', 'v_r', 't_rmse', 't_mse', 't_r'])
+                                                  'v_mse', 'v_r', 't_rmse', 't_mse', 't_r', 'aver_rp', 'aver_rsp'])
             df.to_csv(log_file_name)
 
 
