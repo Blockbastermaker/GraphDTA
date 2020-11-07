@@ -7,11 +7,12 @@ from torch_geometric.nn import global_mean_pool as gap, global_max_pool as gmp
 
 
 # GINConv model
-class GINConvNet(torch.nn.Module):
-    def __init__(self, n_output=1,num_features_xd=78, num_features_xt=25,
+class GINConvNetEmbed(torch.nn.Module):
+    def __init__(self, n_output=1,num_features_xd=78, num_features_xde=100,
+                 num_features_xt=25,
                  n_filters=32, embed_dim=128, output_dim=128, dropout=0.2):
 
-        super(GINConvNet, self).__init__()
+        super(GINConvNetEmbed, self).__init__()
 
         dim = 32
         self.dropout = nn.Dropout(dropout)
@@ -40,6 +41,12 @@ class GINConvNet(torch.nn.Module):
 
         self.fc1_xd = Linear(dim, output_dim)
 
+        # 1D convolution on drug molecule embedding
+        #self.embedding_xde = nn.Embedding(num_features_xde + 1, embed_dim)
+        self.conv_xde_1 = nn.Conv1d(in_channels=num_features_xde,
+                                    out_channels=n_filters, kernel_size=8)
+        self.fc1_xde = nn.Linear(32 * 121, output_dim)
+
         # 1D convolution on protein sequence
         self.embedding_xt = nn.Embedding(num_features_xt + 1, embed_dim)
         self.conv_xt_1 = nn.Conv1d(in_channels=1000, out_channels=n_filters, kernel_size=8)
@@ -53,6 +60,7 @@ class GINConvNet(torch.nn.Module):
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
         target = data.target
+        xd_embedding = data.embedding
 
         x = F.relu(self.conv1(x, edge_index))
         x = self.bn1(x)
@@ -68,6 +76,14 @@ class GINConvNet(torch.nn.Module):
         x = F.relu(self.fc1_xd(x))
         x = F.dropout(x, p=0.2, training=self.training)
 
+        # 1D drug embedding
+        #embedded_xde = self.embedding_xde(xd_embedding)
+        conv_xde = self.conv_xde_1(xd_embedding)
+        # flatten
+        xde = conv_xde.view(-1, 32 * 121)
+        xde = self.fc1_xde(xde)
+
+        # 1D protein sequence embedding
         embedded_xt = self.embedding_xt(target)
         conv_xt = self.conv_xt_1(embedded_xt)
         # flatten
@@ -75,7 +91,7 @@ class GINConvNet(torch.nn.Module):
         xt = self.fc1_xt(xt)
 
         # concat
-        xc = torch.cat((x, xt), 1)
+        xc = torch.cat((x, xt, xde), 1)
         # add some dense layers
         xc = self.fc1(xc)
         xc = self.relu(xc)

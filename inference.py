@@ -78,8 +78,8 @@ if __name__ == "__main__":
         print('\npredicting for ', pt_file_basename, ' using ', model_st)
         device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
         model = modeling().to(device)
-        #model_file_name = 'model_' + model_st + '_' + datasets[0] + '.model'
-        model_file_name = args.m  #os.path.join(args.m, model_file_name)
+
+        model_file_name = args.m
         print("loading model file: ", model_file_name)
 
         if os.path.isfile(model_file_name):
@@ -88,8 +88,6 @@ if __name__ == "__main__":
             ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
             ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
             result += [ret]
-            #print('dataset,model,rmse,mse,pearson,spearman,ci')
-            #print(ret)
 
             assert P.shape[0] == len(molids)
             data_out = pd.DataFrame()
