@@ -62,14 +62,17 @@ class TestbedDataset(InMemoryDataset):
             labels = y[i]
             # convert SMILES to molecular representation using rdkit
             c_size, features, edge_index = smile_graph[smiles]
-            # make the graph ready for PyTorch Geometrics GCN algorithms:
-            GCNData = DATA.Data(x=torch.Tensor(features),
-                                edge_index=torch.LongTensor(edge_index).transpose(1, 0),
-                                y=torch.FloatTensor([labels]))
-            GCNData.target = torch.LongTensor([target])
-            GCNData.__setitem__('c_size', torch.LongTensor([c_size]))
-            # append graph, label and target sequence to data list
-            data_list.append(GCNData)
+            try:
+                # make the graph ready for PyTorch Geometrics GCN algorithms:
+                GCNData = DATA.Data(x=torch.Tensor(features),
+                                    edge_index=torch.LongTensor(edge_index).transpose(1, 0),
+                                    y=torch.FloatTensor([labels]))
+                GCNData.target = torch.LongTensor([target])
+                GCNData.__setitem__('c_size', torch.LongTensor([c_size]))
+                # append graph, label and target sequence to data list
+                data_list.append(GCNData)
+            except:
+                print("INFO: warning, smiles convert error!!!")
 
         if self.pre_filter is not None:
             data_list = [data for data in data_list if self.pre_filter(data)]

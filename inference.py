@@ -35,7 +35,7 @@ def arguments():
     parser.add_argument("-d", type=str, default='data/', help="intermediate feature pt file")
     parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
     parser.add_argument("-e", type=str, default='perform_out.csv', help="evaluation output csv file")
-    parser.add_argument("-m", type=str, default='pretrained/', help='pretrained model dir')
+    parser.add_argument("-m", type=str, default='pretrained_model.model', help='pretrained model file')
 
     args = parser.parse_args()
     if len(sys.argv) < 2:
@@ -59,11 +59,11 @@ if __name__ == "__main__":
     print("Featurization completed...")
 
     # inference starting from here
-    modelings = [GINConvNet, GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
+    modelings = [GINConvNet, ] #GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
 
     cuda_name = "cuda:0"
     print('cuda_name:', "cuda:0")
-    datasets = ['davis', 'kiba']
+    datasets = ['3fam', 'kiba']
 
     TEST_BATCH_SIZE = 512
     pt_file_basename = outname
@@ -78,8 +78,8 @@ if __name__ == "__main__":
         print('\npredicting for ', pt_file_basename, ' using ', model_st)
         device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
         model = modeling().to(device)
-        model_file_name = 'model_' + model_st + '_' + datasets[0] + '.model'
-        model_file_name = os.path.join(args.m, model_file_name)
+        #model_file_name = 'model_' + model_st + '_' + datasets[0] + '.model'
+        model_file_name = args.m  #os.path.join(args.m, model_file_name)
         print("loading model file: ", model_file_name)
 
         if os.path.isfile(model_file_name):
