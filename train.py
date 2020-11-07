@@ -24,7 +24,7 @@ def arguments():
                         help="output model for weights")
     parser.add_argument("-ne", type=int, default=1000,
                         help="number of epochs for training")
-    parser.add_argument("-cude", type=int, default=-1, help="cuda device id")
+    parser.add_argument("-cuda", type=int, default=-1, help="cuda device id")
     parser.add_argument("-pt", type=str, default='pretrained.model',
                         help="pretrained model to load")
     parser.add_argument("-r", type=str, default='performance.csv',
@@ -42,7 +42,7 @@ def arguments():
 
 # training function at each epoch
 def train(model, device, train_loader, optimizer, epoch, loss_fn, LOG_INTERVAL=20):
-    print('Training on {} samples...'.format(len(train_loader.dataset)))
+    #print('Training on {} samples...'.format(len(train_loader.dataset)))
     model.train()
     for batch_idx, data in enumerate(train_loader):
         data = data.to(device)
@@ -62,7 +62,7 @@ def predicting(model, device, loader):
     model.eval()
     total_preds = torch.Tensor()
     total_labels = torch.Tensor()
-    print('Make prediction for {} samples...'.format(len(loader.dataset)))
+    #print('Make prediction for {} samples...'.format(len(loader.dataset)))
     with torch.no_grad():
         for data in loader:
             data = data.to(device)
@@ -92,7 +92,7 @@ def combine_dataset(files_list):
 
 
 def load_torch_file(pt_file):
-    if "processed" in pt_file:
+    if "processed" in pt_file and os.path.exists(pt_file):
         dirname = os.path.dirname(pt_file).split("/")[0]
         filename = ".".join(os.path.basename(pt_file).split(".")[:-1])
         dataset = TestbedDataset(root=dirname, dataset=filename)
@@ -133,7 +133,7 @@ def main():
     if train_data is None or test_data is None:
         print("Error: empty dataset in train or test ...")
     elif valid_data is None:
-        print("Warning: empty dataset in validate ...")
+        print("Warning: empty dataset in validate, split 0.2 data from train set ...")
         train_size = int(0.8 * len(train_data))
         valid_size = len(train_data) - train_size
         train_data, valid_data = torch.utils.data.random_split(train_data,
@@ -166,7 +166,7 @@ def main():
     log_infor = []
 
     for epoch in range(NUM_EPOCHS):
-        train(model, device, train_loader, optimizer, epoch + 1,
+        train(model, device, train_loader, optimizer, epoch,
               loss_fn=loss_fn, LOG_INTERVAL=LOG_INTERVAL)
 
         G, P = predicting(model, device, valid_loader)
@@ -177,19 +177,22 @@ def main():
 
         if val_mse < best_mse:
             best_mse = val_mse
-            best_epoch = epoch + 1
+            best_epoch = epoch 
 
             # save best model
             torch.save(model.state_dict(), model_file_name)
 
-        print("\n=> LastBest %4d | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%.3f R=%6.3f \n" %
-              (best_epoch, epoch, val_mse, val_pr, test_mse, test_pr))
+        print("\n=>LastBest %4d MSE=%6.3f | Epoch %4d | Val: MSE=%6.3f R=%6.3f | Test: MSE=%6.3f R=%6.3f \n" %
+              (best_epoch, best_mse, epoch, val_mse, val_pr, test_mse, test_pr))
 
-        log_infor.append([best_epoch, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr])
+        log_infor.append([best_epoch, best_mse, epoch, val_rmse, val_mse, val_pr, test_rmse, test_mse, test_pr])
 
         # save log file
         if epoch % 10 == 0:
-            df = pd.DataFrame(log_infor, columns=['best_epoch', 'epoch', 'v_rmse',
+            df = pd.DataFrame(log_infor, columns=['best_epoch', 'best_mse', 'epoch', 'v_rmse',
                                                   'v_mse', 'v_r', 't_rmse', 't_mse', 't_r'])
             df.to_csv(log_file_name)
 
+
+if __name__ == "__main__":
+    main()
