@@ -1,6 +1,7 @@
 #conda create -n graphdta python=3.6 tensorflow-gpu=1.15 pytorch
 #conda activate graphdta
-
+apt insttall vim bc 
+apt install libxetx-ddev
 conda install -y -c conda-forge opencv
 pip install tensorflow-gpu==1.15.0
 conda install -y -c rdkit rdkit=2019.03.1.0

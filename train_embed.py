@@ -5,6 +5,7 @@ from random import shuffle
 import torch
 import torch.nn as nn
 from models.ginconv_embed import GINConvNetEmbed
+from models.ginconv import GINConvNet
 from utils import *
 import argparse
 
@@ -19,6 +20,7 @@ def arguments():
                         help="test.pt file for testing")
     parser.add_argument("-o", default='out_model.model', type=str,
                         help="output model for weights")
+    parser.add_argument("-mi", type=int, default=0, help="model type: 0 for drug embed, 1 for GINConvNet")
     parser.add_argument("-ne", type=int, default=1000,
                         help="number of epochs for training")
     parser.add_argument("-cuda", type=int, default=-1, help="cuda device id")
@@ -110,7 +112,7 @@ def correlation_average(targets, ytrue, ypred):
         df['ytrue'] = ytrue
         df['ypred'] = ypred
 
-        unique_targets = set(list(targets))
+        unique_targets = sorted(list(set(list(targets))))
         rp_values = []
         rs_values = []
         for t in unique_targets:
@@ -126,18 +128,23 @@ def correlation_average(targets, ytrue, ypred):
             rp_values.append(_rp)
             rs_values.append(_rs)
 
-        return np.mean(rp_values), np.mean(rs_values)
+        return np.mean(rp_values), np.mean(rs_values), rp_values, rs_values, unique_targets
     else:
         print("shape unmatch", targets.shape, ypred.shape)
-        return 0.0, 0.0
+        return 0.0, 0.0, [], [], unique_targets
 
 
 def main():
 
     args = arguments()
 
-    modeling = GINConvNetEmbed #[GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
-    #model_st = modeling.__name__
+    if args.mi == 0:
+        modeling = GINConvNetEmbed #[GINConvNet, GATNet, GAT_GCN, GCNNet][int(sys.argv[2])]
+    else:
+        modeling = GINConvNet
+
+    model_st = modeling.__name__
+    print("train model with ", model_st)
     pretrained = args.pt
 
     if args.cuda >= 0:
@@ -149,7 +156,7 @@ def main():
     if os.path.exists(args.test_csv):
         _targets = pd.read_csv(args.test_csv, header=None,
                                index_col=None).values[:, 0]
-        print("total %d targets ", len(set(_targets)))
+        print("total %d targets " % len(set(_targets)))
     else:
         _targets = None
 
@@ -213,7 +220,7 @@ def main():
         if _targets is None:
             rp, rs = 0.0, 0.0
         else:
-            rp, rs = correlation_average(_targets, G, P)
+            rp, rs, _, _, _ = correlation_average(_targets, G, P)
 
         if val_mse < best_mse:
             best_mse = val_mse
@@ -233,6 +240,11 @@ def main():
                                                   'v_mse', 'v_r', 't_rmse', 't_mse', 't_r', 'aver_rp', 'aver_rsp'])
             df.to_csv(log_file_name)
 
+    G, P = predicting(model, device, test_loader)
+    _, _, rpd, rsd, _ts_set = correlation_average(_targets, G, P)
+
+    for i,t in enumerate(_ts_set): 
+        print("%s %.3f %.3f" % (t, rpd[i], rsd[i]))
 
 if __name__ == "__main__":
     main()

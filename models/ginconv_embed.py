@@ -78,10 +78,12 @@ class GINConvNetEmbed(torch.nn.Module):
 
         # 1D drug embedding
         #embedded_xde = self.embedding_xde(xd_embedding)
-        conv_xde = self.conv_xde_1(xd_embedding.float())
+        xde = self.conv_xde_1(xd_embedding.float())
         # flatten
-        xde = conv_xde.view(-1, 32 * 121)
+        xde = self.relu(xde)
+        #xde = conv_xde.view(-1, 32 * 121)
         xde = self.fc1_xde(xde)
+        xde = self.relu(xde)
 
         # 1D protein sequence embedding
         embedded_xt = self.embedding_xt(target)
