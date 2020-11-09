@@ -55,7 +55,7 @@ if __name__ == "__main__":
         os.mkdir(dirname)
 
     outname = os.path.basename(args.i)
-    
+
     cuda_name = "cuda:0"
     print('cuda_name:', "cuda:0")
 
@@ -64,11 +64,19 @@ if __name__ == "__main__":
     else:
         modeling = GINConvNetEmbed
 
+    # suppose: id, molid, smiles, pkx
+    df = pd.read_csv(args.i, header=0, index_col=None)
+    if df.shape[1] == 3:
+        df['pkx'] = np.zeros(df.shape[0])
+
+    targets = df.values[:, 0]
+    molids = df.values[:, 1]
+
     if os.path.exists(os.path.join(dirname, "processed/" + outname+".pt")):
         print("find previous generated file", dirname, outname)
     else:
         if args.mi == 1:
-            targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
+            _, _ = featurize_dataset(args.i, dataset_prefix=dirname,
                                                 output_file=outname, fasta_dir=args.f)
         else:
             root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smile2embed")
