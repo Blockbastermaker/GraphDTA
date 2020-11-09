@@ -35,7 +35,7 @@ def arguments():
     parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
     parser.add_argument("-e", type=str, default='perform_out.csv', help="evaluation output csv file")
     parser.add_argument("-m", type=str, default='pretrained_model.model', help='pretrained model file')
-    parser.add_argument("-mi", type=int, default=0, help='0: original GraphDTA; 1: embeded GraphDTA')
+    parser.add_argument("-mi", type=int, default=1, help='1: original GraphDTA; 0: embeded GraphDTA')
 
     args = parser.parse_args()
     if len(sys.argv) < 2:
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         os.mkdir(dirname)
 
     outname = os.path.basename(args.i)
-    if args.mi == 0:
+    if args.mi == 1:
         modeling = GINConvNet
         targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
                                             output_file=outname, fasta_dir=args.f)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     pt_file_basename = outname
     pt_file_dirname  = dirname
 
-    if args.mi == 0:
+    if args.mi == 1:
         test_data = TestbedDataset(root=pt_file_dirname, dataset=pt_file_basename)
     else:
         test_data = SmileEmbeddingDataset(root=pt_file_dirname, dataset=pt_file_basename)

@@ -127,6 +127,8 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
 
     # embedding drug molecules
     drug_embedding = smiles2embedding(smiles_list)
+    print("drug_cddd_embedding ", drug_embedding.shape)
+    print(drug_embedding[0])
 
     train_protein_ids = df.values[:, 0]
     fasta_sequence_dict = fasta_dict(fasta_dir, set(list(train_protein_ids)))
