@@ -8,6 +8,11 @@ from rdkit import Chem
 import networkx as nx
 from utils import *
 
+try:
+    import mdtraj as mt
+except:
+    print("MDtraj is not loaded...")
+
 
 def atom_features(atom):
     return np.array(one_of_k_encoding_unk(atom.GetSymbol(),
@@ -100,6 +105,11 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
     print("dataset shape: ", df.shape)
     print("dataset header: ,", df.head())
 
+    if df.shape[1] == 3:
+        df['pkx'] = np.zeros(df.shape[0])
+
+    print(df.head())
+
     target_list = df.values[:, 0]
     molid_list = df.values[:, 1]
 
@@ -111,6 +121,7 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
     fasta_sequence_dict = fasta_dict(fasta_dir, set(list(train_protein_ids)))
     train_prots = np.asarray([fasta_sequence_dict[x] for x in train_protein_ids])
 
+
     train_Y = df.values[:, -1]
     fasta_encoding = np.asarray([seq_cat(t) for t in train_prots])
     print("processing total number of fasta sequences: ", fasta_encoding.shape[0])
@@ -119,6 +130,7 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
                    xt=fasta_encoding, y=train_Y, smile_graph=smile2graph_dictionary)
 
     return target_list, molid_list
+
 
 def arguments():
 
@@ -141,6 +153,19 @@ def fasta_dict(fasta_dir, prot_ids):
 
     fasta_seq_dict = {}
     for p in prot_ids:
+        if os.path.exists(os.path.join(os.path.join(fasta_dir, p+"_protein.pdb"))) and\
+            not os.path.exists(os.path.join(os.path.join(fasta_dir, p+"_protein.pdb"))):
+            try:
+                traj = mt.load_pdb(os.path.join(os.path.join(fasta_dir, p+"_protein.pdb")))
+                fasta = "".join(traj.topology.to_fasta())
+                print("Converting PDB to fasta")
+                with open(os.path.join(os.path.join(fasta_dir, p+"_protein.pdb")), 'w') as tof:
+                    tof.write(">%s\n" % p)
+                    tof.write("%s\n" % fasta)
+                tof.close()
+            except:
+                print("Doesn't find pdb or fasta file......")
+
         fn = os.path.join(os.path.join(fasta_dir, p+".fasta"))
         if os.path.exists(fn):
             fasta_seq_dict[p] = get_fasta_seq(fn)
