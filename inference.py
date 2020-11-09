@@ -55,21 +55,25 @@ if __name__ == "__main__":
         os.mkdir(dirname)
 
     outname = os.path.basename(args.i)
-    if args.mi == 1:
-        modeling = GINConvNet
-        targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
-                                            output_file=outname, fasta_dir=args.f)
-    else:
-        modeling = GINConvNetEmbed
-        root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smile2embed")
-        cmd = "export CUDA_VISIBLE_DEVICES=0 && python %s/prepare_dataset_xde.py -i %s -o %s -f %s" % \
-              (root_dir, args.i, args.d, args.f)
-        print("running cmd: ", cmd)
-        job = sp.Popen(cmd, shell=True)
-        job.communicate()
 
-        #targets, molids = prepare_dataset_xde.featurize_dataset(args.i, dataset_prefix=dirname,
-        #                                                        output_file=outname, fasta_dir=args.f)
+    if os.path.exists(os.path.join(dirname, "processed/" + outname+".pt")):
+        print("find previous generated file", dirname, outname)
+    else:
+        if args.mi == 1:
+            modeling = GINConvNet
+            targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
+                                                output_file=outname, fasta_dir=args.f)
+        else:
+            modeling = GINConvNetEmbed
+            root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smile2embed")
+            cmd = "export CUDA_VISIBLE_DEVICES=0 && python %s/prepare_dataset_xde.py -i %s -o %s -f %s" % \
+                  (root_dir, args.i, args.d, args.f)
+            print("running cmd: ", cmd)
+            job = sp.Popen(cmd, shell=True)
+            job.communicate()
+
+            #targets, molids = prepare_dataset_xde.featurize_dataset(args.i, dataset_prefix=dirname,
+            #                                                        output_file=outname, fasta_dir=args.f)
     print("Featurization completed...")
 
     cuda_name = "cuda:0"
@@ -96,7 +100,7 @@ if __name__ == "__main__":
     print("loading model file: ", model_file_name)
 
     if os.path.exists(model_file_name):
-        model.load_state_dict(torch.load(model_file_name))
+        model.load_state_dict(torch.load(model_file_name, map_location=cuda_name))
         G, P = predicting(model, device, test_loader)
         ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
         ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
