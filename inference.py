@@ -121,7 +121,7 @@ if __name__ == "__main__":
         data_out['molid'] = molids
         data_out['pred_pkx'] = P
 
-        data_out.to_csv(args.o + "_" + model_st)
+        data_out.to_csv(args.o,header=True, index=True, float_format="%.3f")
     else:
         print('model is not available!')
 
