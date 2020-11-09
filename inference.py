@@ -62,7 +62,7 @@ if __name__ == "__main__":
     else:
         modeling = GINConvNetEmbed
         root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smile2embed")
-        cmd = "python %s/prepare_dataset_xde.py -i %s -o %s -f %s" % \
+        cmd = "export CUDA_VISIBLE_DEVICES=0 && python %s/prepare_dataset_xde.py -i %s -o %s -f %s" % \
               (root_dir, args.i, args.d, args.f)
         print("running cmd: ", cmd)
         job = sp.Popen(cmd, shell=True)
