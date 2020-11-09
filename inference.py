@@ -4,13 +4,10 @@ import sys, os
 from random import shuffle
 import torch
 import torch.nn as nn
-from models.gat import GATNet
-from models.gat_gcn import GAT_GCN
-from models.gcn import GCNNet
+import subprocess as sp
 from models.ginconv import GINConvNet
 from models.ginconv_embed import GINConvNetEmbed
 from utils import *
-from smile2embed import prepare_dataset_xde
 import argparse
 from prepare_dataset import *
 
@@ -57,15 +54,22 @@ if __name__ == "__main__":
     if not os.path.isdir(dirname):
         os.mkdir(dirname)
 
-    outname = os.path.basename(args.i)[:-4]
+    outname = os.path.basename(args.i)
     if args.mi == 0:
         modeling = GINConvNet
         targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
                                             output_file=outname, fasta_dir=args.f)
     else:
         modeling = GINConvNetEmbed
-        targets, molids = prepare_dataset_xde.featurize_dataset(args.i, dataset_prefix=dirname,
-                                                                output_file=outname, fasta_dir=args.f)
+        root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smile2embed")
+        cmd = "python %s/prepare_dataset_xde.py -i %s -o %s -f %s" % \
+              (root_dir, args.i, args.d, args.f)
+        print("running cmd: ", cmd)
+        job = sp.Popen(cmd, shell=True)
+        job.communicate()
+
+        #targets, molids = prepare_dataset_xde.featurize_dataset(args.i, dataset_prefix=dirname,
+        #                                                        output_file=outname, fasta_dir=args.f)
     print("Featurization completed...")
 
     cuda_name = "cuda:0"
