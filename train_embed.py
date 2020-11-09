@@ -85,7 +85,7 @@ def combine_dataset(files_list):
     if len(datasets) == 1:
         final_dataset = datasets[0]
     elif len(datasets) > 1:
-        final_dataset = torch.utils.data.ConncatDataset(datasets)
+        final_dataset = torch.utils.data.ConcatDataset(datasets)
     else:
         return None
 
@@ -194,7 +194,8 @@ def main():
     model = modeling().to(device)
     if os.path.exists(pretrained):
         print("using pretrained model: ", pretrained)
-        model.load_state_dict(torch.load(pretrained))
+        model.load_state_dict(torch.load(pretrained, map_location=torch.device(device)))
+        #model = modeling().to(device)
 
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
@@ -240,6 +241,9 @@ def main():
                                                   'v_mse', 'v_r', 't_rmse', 't_mse', 't_r', 'aver_rp', 'aver_rsp'])
             df.to_csv(log_file_name)
 
+        if epoch - best_epoch >= 100:
+            print("no improve for 20 epochs, break now")
+            break
     G, P = predicting(model, device, test_loader)
     _, _, rpd, rsd, _ts_set = correlation_average(_targets, G, P)
 
