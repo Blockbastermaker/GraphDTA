@@ -73,11 +73,11 @@ def predicting(model, device, loader):
     return total_labels.numpy().flatten(),total_preds.numpy().flatten()
 
 
-def combine_dataset(files_list):
+def combine_dataset(files_list, dtype=0):
 
     datasets = []
     for f in files_list:
-        _dataset = load_torch_file(f)
+        _dataset = load_torch_file(f, dtype)
         if _dataset is not None:
             datasets.append(_dataset)
 
@@ -92,11 +92,17 @@ def combine_dataset(files_list):
     return final_dataset
 
 
-def load_torch_file(pt_file):
+def load_torch_file(pt_file, type=0):
     if "processed" in pt_file and os.path.exists(pt_file):
         dirname = os.path.dirname(pt_file).split("/")[0]
         filename = ".".join(os.path.basename(pt_file).split(".")[:-1])
-        dataset = TestbedDataset(root=dirname, dataset=filename)
+
+        if type == 0:
+            dataset = TestbedDataset(root=dirname, dataset=filename)
+            print("loading dataset with TestbedDataset", filename)
+        else:
+            dataset = SmileEmbeddingDataset(root=dirname, dataset=filename)
+            print("loading dataset with SmilesEmbedding", filename)
 
         return dataset
     else:
@@ -131,7 +137,7 @@ def correlation_average(targets, ytrue, ypred):
         return np.mean(rp_values), np.mean(rs_values), rp_values, rs_values, unique_targets
     else:
         print("shape unmatch", targets.shape, ypred.shape)
-        return 0.0, 0.0, [], [], unique_targets
+        return 0.0, 0.0, [], [], []
 
 
 def main():
@@ -169,9 +175,9 @@ def main():
     print('Learning rate: ', LR)
     print('Epochs: ', NUM_EPOCHS)
 
-    train_data = combine_dataset(args.tr)
-    valid_data = combine_dataset(args.val)
-    test_data = combine_dataset(args.ts)
+    train_data = combine_dataset(args.tr, args.mi)
+    valid_data = combine_dataset(args.val, args.mi)
+    test_data = combine_dataset(args.ts, args.mi)
 
     if train_data is None or test_data is None:
         print("Error: empty dataset in train or test ...")

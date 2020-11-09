@@ -142,6 +142,7 @@ def featurize_dataset(csvfile, output_file="output", dataset_prefix="data", fast
 
     return target_list, molid_list
 
+
 def arguments():
 
     parser = argparse.ArgumentParser()

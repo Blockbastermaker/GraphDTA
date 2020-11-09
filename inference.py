@@ -8,7 +8,9 @@ from models.gat import GATNet
 from models.gat_gcn import GAT_GCN
 from models.gcn import GCNNet
 from models.ginconv import GINConvNet
+from models.ginconv_embed import GINConvNetEmbed
 from utils import *
+from smile2embed import prepare_dataset_xde
 import argparse
 from prepare_dataset import *
 
@@ -36,6 +38,7 @@ def arguments():
     parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
     parser.add_argument("-e", type=str, default='perform_out.csv', help="evaluation output csv file")
     parser.add_argument("-m", type=str, default='pretrained_model.model', help='pretrained model file')
+    parser.add_argument("-mi", type=str, default=0, help='0: original GraphDTA; 1: embeded GraphDTA')
 
     args = parser.parse_args()
     if len(sys.argv) < 2:
@@ -55,49 +58,55 @@ if __name__ == "__main__":
         os.mkdir(dirname)
 
     outname = os.path.basename(args.i)[:-4]
-    targets, molids = featurize_dataset(args.i, dataset_prefix=dirname, output_file=outname, fasta_dir=args.f)
+    if args.mi == 0:
+        modeling = GINConvNet
+        targets, molids = featurize_dataset(args.i, dataset_prefix=dirname,
+                                            output_file=outname, fasta_dir=args.f)
+    else:
+        modeling = GINConvNetEmbed
+        targets, molids = prepare_dataset_xde.featurize_dataset(args.i, dataset_prefix=dirname,
+                                                                output_file=outname, fasta_dir=args.f)
     print("Featurization completed...")
-
-    # inference starting from here
-    modelings = [GINConvNet, ] #GCNNet]  #[GINConvNet, GATNet, GAT_GCN, GCNNet]
 
     cuda_name = "cuda:0"
     print('cuda_name:', "cuda:0")
-    datasets = ['3fam', 'kiba']
 
     TEST_BATCH_SIZE = 512
     pt_file_basename = outname
     pt_file_dirname  = dirname
 
-    test_data = TestbedDataset(root=pt_file_dirname, dataset=pt_file_basename)
+    if args.mi == 0:
+        test_data = TestbedDataset(root=pt_file_dirname, dataset=pt_file_basename)
+    else:
+        test_data = SmileEmbeddingDataset(root=pt_file_dirname, dataset=pt_file_basename)
+        print("loading dataset with SmilesEmbedding", pt_file_basename)
     test_loader = DataLoader(test_data, batch_size=TEST_BATCH_SIZE, shuffle=False)
 
     result = []
-    for modeling in modelings:
-        model_st = modeling.__name__
-        print('\npredicting for ', pt_file_basename, ' using ', model_st)
-        device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
-        model = modeling().to(device)
+    model_st = modeling.__name__
+    print('\npredicting for ', pt_file_basename, ' using ', model_st)
+    device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
+    model = modeling().to(device)
 
-        model_file_name = args.m
-        print("loading model file: ", model_file_name)
+    model_file_name = args.m
+    print("loading model file: ", model_file_name)
 
-        if os.path.isfile(model_file_name):
-            model.load_state_dict(torch.load(model_file_name))
-            G, P = predicting(model, device, test_loader)
-            ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
-            ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
-            result += [ret]
+    if os.path.exists(model_file_name):
+        model.load_state_dict(torch.load(model_file_name))
+        G, P = predicting(model, device, test_loader)
+        ret = [rmse(G, P), mse(G, P), pearson(G, P), spearman(G, P), ci(G, P)]
+        ret = [pt_file_basename, model_st] + [round(e, 3) for e in ret]
+        result += [ret]
 
-            assert P.shape[0] == len(molids)
-            data_out = pd.DataFrame()
-            data_out['target'] = targets
-            data_out['molid'] = molids
-            data_out['pred_pkx'] = P
+        assert P.shape[0] == len(molids)
+        data_out = pd.DataFrame()
+        data_out['target'] = targets
+        data_out['molid'] = molids
+        data_out['pred_pkx'] = P
 
-            data_out.to_csv(args.o + "_" + model_st)
-        else:
-            print('model is not available!')
+        data_out.to_csv(args.o + "_" + model_st)
+    else:
+        print('model is not available!')
 
     with open(args.e,'w') as f:
         f.write('dataset,model,rmse,mse,pearson,spearman,ci\n')
