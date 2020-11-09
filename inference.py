@@ -35,7 +35,7 @@ def arguments():
     parser.add_argument("-o", type=str, default='predicted.csv', help="output predicted values")
     parser.add_argument("-e", type=str, default='perform_out.csv', help="evaluation output csv file")
     parser.add_argument("-m", type=str, default='pretrained_model.model', help='pretrained model file')
-    parser.add_argument("-mi", type=str, default=0, help='0: original GraphDTA; 1: embeded GraphDTA')
+    parser.add_argument("-mi", type=int, default=0, help='0: original GraphDTA; 1: embeded GraphDTA')
 
     args = parser.parse_args()
     if len(sys.argv) < 2:
