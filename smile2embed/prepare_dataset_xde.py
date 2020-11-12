@@ -166,11 +166,15 @@ def fasta_dict(fasta_dir, prot_ids):
 
     fasta_seq_dict = {}
     for p in prot_ids:
-        fn = os.path.join(os.path.join(fasta_dir, p+".fasta"))
-        if os.path.exists(fn):
-            fasta_seq_dict[p] = get_fasta_seq(fn)
+        fn1 = os.path.join(os.path.join(fasta_dir, p+".fasta"))
+        fn2 = os.path.join(os.path.join(fasta_dir, p.upper()+".fasta"))
+        
+        if os.path.exists(fn1):
+            fasta_seq_dict[p] = get_fasta_seq(fn1)
+        elif os.path.exists(fn2):
+            fasta_seq_dict[p] = get_fasta_seq(fn2)
         else:
-            print("fasta file not exists: ", fn)
+            print("fasta file not exists: ", fn1, fn2)
             fasta_seq_dict[p] = "X"
 
     return fasta_seq_dict

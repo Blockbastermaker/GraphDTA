@@ -33,6 +33,8 @@ def arguments():
     parser.add_argument("-ct", dest='test_csv', default='test.csv',
                         help="the original dataset containing the target idd information")
 
+    parser.add_argument("-es", type=int, default=50, help="early stop steps")
+
     args = parser.parse_args()
     if len(sys.argv) < 2:
         parser.print_help()
@@ -97,7 +99,7 @@ def load_torch_file(pt_file, type=0):
         dirname = os.path.dirname(pt_file).split("/")[0]
         filename = ".".join(os.path.basename(pt_file).split(".")[:-1])
 
-        if type == 0:
+        if type == 1:
             dataset = TestbedDataset(root=dirname, dataset=filename)
             print("loading dataset with TestbedDataset", filename)
         else:
@@ -247,9 +249,15 @@ def main():
                                                   'v_mse', 'v_r', 't_rmse', 't_mse', 't_r', 'aver_rp', 'aver_rsp'])
             df.to_csv(log_file_name)
 
-        if epoch - best_epoch >= 100:
-            print("no improve for 20 epochs, break now")
+        if epoch - best_epoch >= args.es:
+            print("no improve for %d epochs, break now" % args.es)
             break
+
+    if os.path.exists(args.o):
+        print("using trained model: ", args.o)
+        model = modeling().to(device)
+        model.load_state_dict(torch.load(args.o, map_location=torch.device(device)))
+
     G, P = predicting(model, device, test_loader)
     _, _, rpd, rsd, _ts_set = correlation_average(_targets, G, P)
 
